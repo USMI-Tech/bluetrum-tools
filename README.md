@@ -5,7 +5,9 @@ Add CRWN SoC support (AB530X). By BIOS.
 
 26/05/2026
 Add loopback check for orig dongle.
+
 Now working with any UART dongle - original, ch340, cp2102 etc.
+
 Usage for CRWN -
 ```
 download.py --port COMx read 0 0x100000 read.bin - for make dump
