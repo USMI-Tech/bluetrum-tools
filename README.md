@@ -2,14 +2,15 @@
 ----------------------------------------------------------------------------------------------------------------
 25/25/2026 
 Add CRWN SoC support (AB530X). By BIOS.
+26/05/2026
+Add loopback check for orig dongle.
+Now working with any UART dongle - original, ch340, cp2102 etc.
 Usage for CRWN -
 ```
 download.py --port COMx read 0 0x100000 read.bin - for make dump
 download.py --port COMx erase 0 0x100000 - for erase 
 download.py --port COMx write 0 dump.bin - for write dump.
-26/05/2026
-Add loopback check for orig dongle.
-Now working with any UART dongle - original, ch340, cp2102 etc.
+
 ```
 Some tools for some obscure RISC-V bluetooth audio chips made by Bluetrum (the "AB"/"A3" and "BT" branded chips).
 These ones seem to begin dominating the low-end previously held with chips made by companies such as JieLi or Buildwin.
