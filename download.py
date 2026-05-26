@@ -636,7 +636,47 @@ def do_the_stuff(execcmd, blocksize, iface):
 
 if have_uart and args.port is not None:
     with Serial(args.port) as port:
-        udl = UARTDownload(port, has_echo=not args.no_echo)
+        # Detect whether the adapter has a TX→RX loopback (e.g. CH340 with
+        # 200 Ω resistor) or not (e.g. Bluetrum's original half-duplex dongle).
+        #
+        # Half-duplex dongle (no loopback):
+        #   port_write sends bytes to chip, chip replies → those replies are
+        #   read back as the "echo".  has_echo=True is correct.
+        #
+        # Full-duplex adapter + resistor (loopback present):
+        #   Our own TX bytes come straight back on RX before the chip replies.
+        #   port_write must NOT try to consume them; the real chip reply is
+        #   read later by send_packet/_recv_token_packet.  has_echo=False.
+        #
+        # Detection: send one byte at low baud with a short timeout.
+        # If it echoes back → loopback adapter → has_echo=False.
+        # If nothing comes back → half-duplex dongle → has_echo=True.
+        if args.no_echo:
+            has_echo = False
+        else:
+            # Detect TX→RX loopback.
+            #
+            # CH340 (standard driver + 200Ω resistor): TX bytes loop back on
+            # RX immediately (within ~1 byte-time = 87µs at 115200).
+            # has_echo=True so port_write consumes them before reading the
+            # real chip response.
+            #
+            # Original Bluetrum dongle (AB5305A / CP2102 modified driver):
+            # driver suppresses local echo → TX bytes do NOT return on RX.
+            # has_echo=False so port_write doesn't try to read phantom bytes.
+            #
+            # Detection: send 0xFF (ignored by BL sync state machine) with a
+            # 5 ms read timeout — long enough for loopback (arrives in <1 ms)
+            # but shorter than the minimum chip processing + reply time.
+            port.baudrate = args.init_baud
+            port.timeout  = 0.005
+            port.write(b'\xff')
+            loopback  = port.read(1) == b'\xff'
+            port.reset_input_buffer()
+            port.timeout  = 0.01
+            has_echo  = loopback
+
+        udl = UARTDownload(port, has_echo=has_echo)
 
         print('Trying to synchronize.', end='')
         port.timeout = .01
