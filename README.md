@@ -2,6 +2,7 @@
 ----------------------------------------------------------------------------------------------------------------
 25/25/2026 
 Add CRWN SoC support (AB530X). By BIOS.
+
 26/05/2026
 Add loopback check for orig dongle.
 Now working with any UART dongle - original, ch340, cp2102 etc.
